@@ -5,10 +5,7 @@ winname = "CV"
 cv2.namedWindow(winname)
 
 # Read in the image
-image = cv2.imread('images/curved_lane.jpg')
-
-# Convert to grayscale for filtering
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+gray = cv2.imread('images/curved_lane.jpg', flags=cv2.IMREAD_GRAYSCALE)
 
 # Display the image copy
 cv2.imshow(winname, gray)
@@ -63,4 +60,59 @@ edges = cv2.Canny(gray, 120, 240)
 cv2.imshow(winname, edges)
 cv2.waitKey()
 
+# Hough Lines
+image = cv2.imread('images/phone.jpg')
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+# Define the Hough transform parameters
+# Make a blank the same size as our image to draw on
+rho = 1
+theta = np.pi / 180
+threshold = 60
+min_line_length = 100
+max_line_gap = 5
+
+line_image = np.copy(image)  # creating an image copy to draw lines on
+
+# Run Hough on the edge-detected image
+lines = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
+                        min_line_length, max_line_gap)
+
+# Iterate over the output "lines" and draw lines on the image copy
+for line in lines:
+    for x1, y1, x2, y2 in line:
+        cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
+
+cv2.imshow(winname, line_image)
+cv2.waitKey()
+
+# Hough Circles
+image = cv2.imread('images/round_farms.jpg')
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+gray_blur = cv2.GaussianBlur(gray, (3, 3), 0)
+
+# for drawing circles on
+circles_im = np.copy(image)
+
+# HoughCircles to detect circles
+# right now there are too many, large circles being detected
+# try changing the value of maxRadius, minRadius, and minDist
+circles = cv2.HoughCircles(gray_blur, cv2.HOUGH_GRADIENT, 1,
+                           minDist=45,
+                           param1=70,
+                           param2=11,
+                           minRadius=25,
+                           maxRadius=30)
+
+# convert circles into expected type
+circles = np.uint16(np.around(circles))
+# draw each one
+for i in circles[0, :]:
+    # draw the outer circle
+    cv2.circle(circles_im, (i[0], i[1]), i[2], (0, 255, 0), 2)
+    # draw the center of the circle
+    cv2.circle(circles_im, (i[0], i[1]), 2, (0, 0, 255), 3)
+
+cv2.imshow(winname, circles_im)
+cv2.waitKey()
 cv2.destroyAllWindows()
